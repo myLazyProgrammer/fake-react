@@ -3,12 +3,47 @@ let wipRoot = null;
 let currentRoot = null;
 let deletions = null;
 
-const isPrototy = key => key != 'children';
-const isNew = (prev, next) => key => prev[key] != next[key];
+const isEvent = key => {
+  return key.startsWith('on')
+};
+const isPrototy = key => key != 'children' && !isEvent(key);
+const isNew = (prev, next) => key => {
+  return prev[key] != next[key]
+};
 const isGone = (prev, next) => key => !(key in next);
 
 function updateDom(dom, prevProps, nextProps) {
+  Object.keys(prevProps)
+    .filter(isEvent)
+    .filter(
+      key => !(key in nextProps) || isNew(prevProps, nextProps)(key)
+    )
+    .forEach(name => {
+      const eventType = name.toLowerCase().substring(2);
+      dom.removeEventlistener(eventType, prevProps[name]);
+    })
 
+  Object.keys(prevProps)
+    .filter(isPrototy)
+    .filter(isGone(prevProps, nextProps))
+    .forEach(name => {
+      dom[name] = ''
+    });
+
+  Object.keys(nextProps)
+    .filter(isPrototy)
+    .filter(isNew(prevProps, nextProps))
+    .forEach(name => {
+      dom[name] = nextProps[name];
+    });
+
+  Object.keys(nextProps)
+    .filter(isEvent)
+    .filter(isNew(prevProps, nextProps))
+    .forEach(name => {
+      const eventType = name.toLowerCase().substring(2);
+      dom.addEventlistener(eventType, nextProps[name]);
+    })
 }
 
 
@@ -36,16 +71,15 @@ function commitWork(fiber) {
     )
   }
 
-  domParent.appendChild(fiber.dom);
   commitWork(fiber.child);
-  commitRoot(fiber.sibling);
+  commitWork(fiber.sibling);
 }
 
 function workLoop(deadline) {
   let shouldYield = false;
-  while (nextUnitofWork && !shouldYield) {
+  while (nextUnitOfWork && !shouldYield) {
     nextUnitOfWork = performUnitofWork(
-      nextUnitofWork
+      nextUnitOfWork
     );
     shouldYield = deadline.timeRemaining() < 1;
   }
@@ -56,6 +90,8 @@ function workLoop(deadline) {
 
   requestIdleCallback(workLoop)
 }
+
+requestIdleCallback(workLoop)
 
 
 function performUnitofWork(fiber) {
@@ -91,7 +127,7 @@ function reconclieChildren(wipFiber, elements) {
 
   while (index < elements.length || oldFiber != null) {
     const element = elements[index];
-    const newFiber = null;
+    let newFiber = null;
 
     const sameType = oldFiber && element && element.type === oldFiber.type;
 
@@ -123,7 +159,7 @@ function reconclieChildren(wipFiber, elements) {
     }
 
     if (index === 0) {
-      fiber.child = newFiber;
+      wipFiber.child = newFiber;
     } else {
       prevSibling.sibling = newFiber;
     }
@@ -132,3 +168,4 @@ function reconclieChildren(wipFiber, elements) {
     index++;
   }
 }
+

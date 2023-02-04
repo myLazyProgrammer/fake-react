@@ -3,26 +3,21 @@ const ReactDom = {
 }
 
 
-function  createDom(element) {
-  const dom = element.type == 'TEXT_ELEMENT' ?  document.createTextNode('') : document.createElement(element.type);
+function  createDom(fiber) {
+  const dom =
+  fiber.type == "TEXT_ELEMENT"
+    ? document.createTextNode("")
+    : document.createElement(fiber.type)
 
-  const isPrototype = key => key != 'children';
+  updateDom(dom, {}, fiber.props)
 
-  Object.keys(element.props)
-    .filter(isPrototype)
-    .forEach(name => {
-      dom[name] = element.props[name]
-    })
-
-  element.props.children.forEach(child => render(child, dom))
-
-  return dom;
+  return dom
 }
 
 
 function render(element, container) {
   wipRoot = {
-    com: container,
+    dom: container,
     props: {
       children: [element],
     },

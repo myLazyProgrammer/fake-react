@@ -1,11 +1,14 @@
-const element = React.createElement(
-  'div',
-  { id: 'foo', style: 'background: black; padding: 20px' },
-  React.createElement('a', {
-    style: "background: white "
-  }, 'bar'),
-  React.createElement('b')
-)
+function App(props) {
+  return React.createElement(
+    'h1',
+    null,
+    'h1',
+    props.name
+  )
+}
+
+const element = React.createElement(App, {name: 'foo'});
+
 
 const container = document.getElementById('root');
-ReactDom.render(element, container)
+ReactDom.render(element, container);
