@@ -117,7 +117,7 @@ function workLoop(deadline) {
     shouldYield = deadline.timeRemaining() < 1;
   }
 
-  // 如果没有可执行的工作单元 就执行commit
+  // 如果没有可协调的工作单元 就执行commit
   if (!nextUnitOfWork && wipRoot) {
     commitRoot();
   }
@@ -154,7 +154,7 @@ function performUnitofWork(fiber) {
   }
 }
 
-// 更新函数组件
+// 更新函数组件节点
 function updateFunctionComponent(fiber) {
   wipFiber = fiber;
   hookIndex = 0;
@@ -164,6 +164,7 @@ function updateFunctionComponent(fiber) {
   reconcileChildren(fiber, children);
 }
 
+// 更新普通节点
 function updateHostComponent(fiber) {
   if (!fiber.dom) {
     fiber.dom = createDom(fiber);
@@ -174,6 +175,7 @@ function updateHostComponent(fiber) {
 
 function reconcileChildren(wipFiber, elements) {
   let index = 0;
+  // 获取老的fiber结构(替身)
   let oldFiber = wipFiber.alternate && wipFiber.alternate.child;
   let prevSibling = null;
 
@@ -181,8 +183,10 @@ function reconcileChildren(wipFiber, elements) {
     const element = elements[index];
     let newFiber = null;
 
+    // 校验是否是同一类型的节点
     const sameType = oldFiber && element && element.type === oldFiber.type;
 
+    // 如果是同一节点 更新节点dom使用原始dom
     if (sameType) {
       newFiber = {
         type: oldFiber.type,
@@ -194,6 +198,7 @@ function reconcileChildren(wipFiber, elements) {
       };
     }
 
+    // 如果有element 但是不是同一类型的 做插入处理
     if (element && !sameType) {
       newFiber = {
         type: element.type,
@@ -205,11 +210,13 @@ function reconcileChildren(wipFiber, elements) {
       }
     }
 
+    // 删除处理
     if (oldFiber && !sameType) {
       oldFiber.effectTag = 'DELETION';
       deletions.push(oldFiber);
     }
 
+    // 获取兄弟组件
     if (oldFiber) {
       oldFiber = oldFiber.sibling;
     }
